@@ -18,12 +18,27 @@ using UnityEngine.UI;
 //      "Thank you, papa"
 //      "I must sleep... and grow, papa"
 //      "I want to be like you when I grow up, papa"
-//      "I must consume your soul... to become flesh and bone"
-// - Several levels of the "boy"
-// - Loot buttons
+//      "I must consume your soul... to become flesh and bone" (Game over state)
+// - Loot buttons with loot progress bar
 // - Loot areas
-// - Some sort of inventory
+// - Some sort of inventory (done)
 // - Drag and drop to feed the "boy" (done)
+// - Drag and drop for inventory (done)
+// - Item text popup
+// - Different types of loot items:
+//      - Batteries
+//      - Scrapes
+//      - Drill
+//      - Broken laptop
+//      - Keyboard
+//      - Box of nails
+//      - Toilet paper
+//      - Hammer
+//      - Test tube
+//      - Petri dish
+
+// Removed from the MVP:
+// - Several levels of the "boy"
 
 public class Manager : MonoBehaviour
 {
@@ -37,6 +52,9 @@ public class Manager : MonoBehaviour
     // Inventory
     public int Batteries, Electronics;
     public DraggableSprite DraggableElectronics, DraggableBatteries;
+    public GameObject FloatingTextUI;
+    public Vector3 FloatingTextUIOffset;
+    public TextMeshProUGUI FloatingTextContent;
 
     // Control
     public bool isDraggingUI;
