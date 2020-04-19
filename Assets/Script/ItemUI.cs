@@ -11,6 +11,8 @@ public class ItemUI : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDropHa
     CanvasGroup CanvasGroup;
     public string ItemName;
 
+    public GameObject OwnPrefab;
+
     void Start()
     {
         OccupyingSlot = transform.parent.gameObject;
