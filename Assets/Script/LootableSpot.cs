@@ -54,6 +54,7 @@ public class LootableSpot : MonoBehaviour
 
         if (ThisContainerName == "") ThisContainerName = "Container";
         Manager.instance.ContainerName.text = ThisContainerName;
+        Manager.instance.CanLoot = false;
     }
 
 

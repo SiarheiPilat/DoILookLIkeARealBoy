@@ -231,6 +231,11 @@ public class Manager : MonoBehaviour
         CanLoot = true;
     }
 
+    public void DisalowToLoot()
+    {
+        CanLoot = false;
+    }
+
     public void ResumeGame()
     {
         Time.timeScale = 1.0f;
