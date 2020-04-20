@@ -16,11 +16,15 @@ public class CameraControl : MonoBehaviour
     public FloatReference CameraSpeed, ApproachThreshold;
     public GameObject[] AllMapButtons;
 
+    //float tempt;
+
     void Update()
     {
         // If anyone sees it, don't tell anyone, please... lol... sending love <3
         if (CanMove)
         {
+            //tempt += Time.deltaTime;
+
             transform.position = Vector3.Lerp(transform.position, NewDestination.position, Time.deltaTime * CameraSpeed.Value * 0.1f);
             if(Vector3.Distance(transform.position, NewDestination.position) < ApproachThreshold.Value)
             {
@@ -56,6 +60,9 @@ public class CameraControl : MonoBehaviour
                 Manager.instance.ConfirmationTextConent.text = "You arrived to the " + temp;
                 Manager.instance.ConfirmationDialogue.SetActive(true);
                 Time.timeScale = 0.0f;
+
+                //Debug.Log(tempt);
+                //tempt = 0.0f;
             }
         }
     }

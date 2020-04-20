@@ -27,10 +27,10 @@ public class LootingUI : MonoBehaviour
         {
             r += Time.deltaTime;
             t += Time.deltaTime / HowLong;
-            Debug.Log(t);
         }
         else
         {
+            Manager.instance.IsSearching = false;
             Manager.instance.SetNormalCursor();
             Manager.instance.SearchingTextContentUI.text = "Done!";
             Manager.instance.OKLootConfirmButton.GetComponent<Button>().interactable = true;

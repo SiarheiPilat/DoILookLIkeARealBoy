@@ -11,7 +11,12 @@ public class ItemUI : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDropHa
     CanvasGroup CanvasGroup;
     public string ItemName;
 
-    public GameObject OwnPrefab;
+    // THIS DOES NOT WORK, IT POINTS TO THE INSTANCE
+    //public GameObject OwnPrefab;
+
+    public int PrefabIndex;
+
+    public int ElectronicsYield, BatteryYeild;
 
     void Start()
     {
@@ -19,11 +24,6 @@ public class ItemUI : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDropHa
         UpdateStartingPos();
         CanvasGroup = GetComponent<CanvasGroup>();
     }
-
-    //void Update()
-    //{
-    //    CanvasGroup.blocksRaycasts = Manager.instance.isDraggingUI ? false : true;
-    // }
 
     public void Drag()
     {
@@ -47,6 +47,10 @@ public class ItemUI : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDropHa
     {
         //Manager.instance.isDraggingUI = false;
         GetComponent<CanvasGroup>().blocksRaycasts = true;
+        if (!transform.parent.GetComponent<SlotUI>())
+        {
+            transform.parent = OccupyingSlot.transform;
+        }
     }
 
     public void UpdateStartingPos()
@@ -75,24 +79,12 @@ public class ItemUI : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDropHa
             eventData.pointerDrag.GetComponent<ItemUI>().OccupyingSlot = OccupyingSlot;
             eventData.pointerDrag.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
 
-
-            //eventData.pointerDrag.transform.parent = OccupyingSlot.transform;
-            //eventData.pointerDrag.GetComponent<ItemUI>().UpdateStartingPos();
-
-            //Debug.Log(TempOccupyingSlot.name);
-
             transform.parent = TempOccupyingSlot.transform;
             OccupyingSlot = TempOccupyingSlot;
             GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
 
             OccupyingSlot.GetComponent<SlotUI>().CurrentOccupant = gameObject;
             eventData.pointerDrag.GetComponent<ItemUI>().OccupyingSlot.GetComponent<SlotUI>().CurrentOccupant = eventData.pointerDrag;
-
-            //GameObject temp = OccupyingSlot;
-            //OccupyingSlot = eventData.pointerDrag.GetComponent<ItemUI>().OccupyingSlot;
-            //eventData.pointerDrag.GetComponent<ItemUI>().OccupyingSlot = temp;
-
-            //UpdateStartingPos();
         }
     }
 

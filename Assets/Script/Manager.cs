@@ -14,15 +14,16 @@ using System.Collections.Generic;
 // - Depleting energy bar (done)
 // - Day timer (done)
 // - Voice lines:
-//      "Do I look like a real boy, papa?"
-//      "Thank you, papa"
-//      "I must sleep... and grow, papa"
-//      "I want to be like you when I grow up, papa"
-//      "I must consume your soul... to become flesh and bone" (Game over state)
+//      "Do I look like a real boy, papa?" (done)
+//      "Thank you, papa" (done)
+//      "I must sleep... and grow, papa" (done)
+//      "I want to be like you when I grow up, papa" (done)
+//      "I must consume your soul... to become flesh and bone" (Game over state) (done)
 // - Loot areas:
 //      - Travel through areas using map list (done)
-//      - Lootable spots (loot buttons with loot progress bar)
-//      - Loot manager
+//      - Lootable spots (loot buttons with loot progress bar) (done)
+//      - Loot manager that would randomize a bit of it
+//      - Loot persistence (done)
 // - Some sort of inventory (done)
 // - Drag and drop to feed the "boy" (done)
 // - Drag and drop for inventory (done)
@@ -39,6 +40,7 @@ using System.Collections.Generic;
 //      - Test tube (done)
 //      - Petri dish (done)
 // - Game balance spreadsheet
+// - Recycler (done)
 
 // Early removed from the MVP:
 // - Several levels of the "boy"
@@ -54,6 +56,7 @@ public class Manager : MonoBehaviour
 
     // Inventory
     public int Batteries, Electronics;
+    public TextMeshProUGUI BatteriesAmountText, ElectronicsAmountText;
     public DraggableSprite DraggableElectronics, DraggableBatteries;
     public GameObject FloatingTextUI;
     public Vector3 FloatingTextUIOffset;
@@ -74,20 +77,112 @@ public class Manager : MonoBehaviour
     // Cursor
     [HorizontalLine]
     public GameObject LootingUIDialogue;
-    public Texture2D SearchCursor, GrabCursor, NormalCursor, WaitCursor;
+    public Texture2D SearchCursor, GrabCursor, NormalCursor, WaitCursor, PointCursor, HoldCursor;
 
     // UI
     [HorizontalLine]
-    public TextMeshProUGUI SearchingTextContentUI;
-    public GameObject OpenMapButton, OpenBackpackButton, OKLootConfirmButton;
+    public TextMeshProUGUI SearchingTextContentUI, ContainerName, GenericMessageDialogueText;
+    public GameObject OpenMapButton, OpenBackpackButton, OKLootConfirmButton, RecycleButton, RecycleProgressDialogue, GenericMessageDialogue;
     public GameObject[] BackpacksAndContent;
+    public GameObject[] ContainerCells;
 
     // Loot
     [HorizontalLine]
-    public bool CanLoot;
+    public bool CanLoot, IsSearching;
     public LootableSpot CurrentlyLooted;
+    public GameObject[] AllPossibleLoot;
+    public List<int> indices;
 
-    public GameObject[] ContainerCells;
+    public void UpdateSuppliesTexts()
+    {
+        BatteriesAmountText.text = "Batteries: " + Batteries.ToString();
+        ElectronicsAmountText.text = "Scraps: " + Electronics.ToString();
+    }
+
+    public void TryRecycle()
+    {
+        for (int i = 0; i < ContainerCells.Length; i++)
+        {
+            if (ContainerCells[i].transform.childCount > 0)
+            {
+                //there's something in the container
+                Recycle();
+                i = ContainerCells.Length;
+            }
+        }
+    }
+
+    void Recycle()
+    {
+        RecycleProgressDialogue.SetActive(true);
+    }
+
+    public void ShowGenericMessage(string messageText)
+    {
+        GenericMessageDialogue.SetActive(true);
+        GenericMessageDialogueText.text = messageText;
+    }
+
+    public void FinalizeRecycle()
+    {
+        int el = 0;
+        int bat = 0;
+
+        for (int i = 0; i < ContainerCells.Length; i++)
+        {
+            if (ContainerCells[i].transform.childCount > 0)
+            {
+                el += ContainerCells[i].transform.GetChild(0).GetComponent<ItemUI>().ElectronicsYield;
+                bat += ContainerCells[i].transform.GetChild(0).GetComponent<ItemUI>().BatteryYeild;
+                Destroy(ContainerCells[i].transform.GetChild(0).gameObject);
+            }
+        }
+
+        Batteries += bat;
+        Electronics += el;
+        UpdateSuppliesTexts();
+        ShowGenericMessage("Result: " + el.ToString() + " Scraps, " + bat.ToString() + " Batteries");
+    }
+
+    [HorizontalLine]
+    public GameObject[] BackpackCells;
+
+    public void CheckIfReturnedToLab()
+    {
+        if(LocationIndex == 0)
+        {
+            CheckBackpackForConsumables();
+        }
+    }
+
+    void CheckBackpackForConsumables()
+    {
+        int el = 0;
+        int bat = 0;
+
+        for (int i = 0; i < BackpackCells.Length; i++)
+        {
+            if (BackpackCells[i].transform.childCount > 0)
+            {
+                if(BackpackCells[i].transform.GetChild(0).gameObject.GetComponent<ItemUI>().ItemName == "Batteries")
+                {
+                    bat++;
+                    Destroy(BackpackCells[i].transform.GetChild(0).gameObject);
+                }
+                if (BackpackCells[i].transform.GetChild(0).gameObject.GetComponent<ItemUI>().ItemName == "Scraps")
+                {
+                    el++;
+                    Destroy(BackpackCells[i].transform.GetChild(0).gameObject);
+                }
+            }
+        }
+
+        Batteries += bat;
+        Electronics += el;
+        UpdateSuppliesTexts();
+        if(bat > 0 || el > 0)
+            ShowGenericMessage("Brought back: " + bat.ToString() + " Batteries, " + el.ToString() + " Scraps");
+    }
 
     void Start()
     {
@@ -95,6 +190,7 @@ public class Manager : MonoBehaviour
         SetNormalCursor();
         instance = this;
         InvokeRepeating("HourTick", 3.0f, HourTickRate.Value);
+        UpdateSuppliesTexts();
     }
 
     public void OpenBackPackAndContainer()
@@ -108,35 +204,26 @@ public class Manager : MonoBehaviour
         CanLoot = false;
     }
 
-    public List<GameObject> tempList;
 
-    public void RemoveLoot()
+
+    public void WhatHappensWhenCloseContainerButtonIsPressed()
     {
-        // the following code is just a candy <3
-        int temp = 0;
-        //List<GameObject> tempList = new List<GameObject>();
-        //tempList = new List<GameObject>();
         for (int i = 0; i < ContainerCells.Length; i++)
         {
             if (ContainerCells[i].transform.childCount > 0)
             {
-                temp++;
-                // this is wrong because it's not a prefab (fixed? NO)
-                tempList.Add(ContainerCells[i].transform.GetChild(0).gameObject.GetComponent<ItemUI>().OwnPrefab);
+                indices.Add(ContainerCells[i].transform.GetChild(0).gameObject.GetComponent<ItemUI>().PrefabIndex);
                 Destroy(ContainerCells[i].transform.GetChild(0).gameObject);
             }
         }
-        Debug.Log(tempList.Count);
-        if (CurrentlyLooted)
+
+        CurrentlyLooted.SetupLootItems = new List<GameObject>();
+        for (int i = 0; i < indices.Count; i++)
         {
-            //Debug.Log(tempList.Count);
-            CurrentlyLooted.LootItems = new GameObject[temp];
-            for (int i = 0; i < temp; i++)
-            {
-                CurrentlyLooted.LootItems[i] = tempList[i];
-            }
-            //tempList = new List<GameObject>();
+            CurrentlyLooted.SetupLootItems.Add(AllPossibleLoot[indices[i]]);
         }
+
+        indices = new List<int>();
     }
 
     public void AllowToLoot()
@@ -152,6 +239,16 @@ public class Manager : MonoBehaviour
     public void SetSearchCursor()
     {
         Cursor.SetCursor(SearchCursor, Vector2.zero, CursorMode.Auto);
+    }
+
+    public void SetHoldCursor()
+    {
+        Cursor.SetCursor(HoldCursor, Vector2.zero, CursorMode.Auto);
+    }
+
+    public void SetPointCursor()
+    {
+        Cursor.SetCursor(PointCursor, Vector2.zero, CursorMode.Auto);
     }
 
     public void SetGrabCursor()
